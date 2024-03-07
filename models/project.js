@@ -6,8 +6,8 @@ const ProjectSchema = new mongoose.Schema({
     required: true,
   },
   manager: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Manager",
   },
   startDate: {
     type: Date,
@@ -21,6 +21,10 @@ const ProjectSchema = new mongoose.Schema({
     type: String,
   },
   tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 export default mongoose.model("Project", ProjectSchema);

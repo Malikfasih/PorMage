@@ -3,27 +3,26 @@ import cors from "cors";
 import * as dotenv from "dotenv";
 import connectDB from "./db/connect.js";
 
-import project from "./routes/projectRoute.js";
-import task from "./routes/taskRoute.js";
+import projectRoute from "./routes/projects.js";
+import taskRoute from "./routes/tasks.js";
+import managerRoute from "./routes/manager.js";
 
 const app = express();
+app.use(cors());
 
 dotenv.config();
 
 // middleware
 app.use(express.json({ limit: "30mb", extended: true }));
 
-app.use(cors());
-
 // routes
-app.use("/project", project);
-app.use("/task", task);
-// app.use("/project", (req, res) => {
-//   res.status(200).send({ message: "Request hitting this route" });
-// });
+app.use("/projects", projectRoute);
+app.use("/tasks", taskRoute);
+app.use("/managers", managerRoute);
 
 const PORT = 8080;
 
+// Test
 app.get("/", (req, res) => {
   res.send("<h1>Welcome to ProMage</h1>");
 });

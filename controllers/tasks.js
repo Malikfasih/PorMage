@@ -4,8 +4,6 @@ import projectModel from "../models/project.js";
 export const createTask = async (req, res) => {
   const { projectId } = req.params;
   const { description, startDate, endDate, status } = req.body;
-  //   console.log("req fields", name, manager, description, startDate, endDate);
-  console.log("projectID:", projectId);
 
   try {
     // validation
@@ -60,8 +58,6 @@ export const getAllTasks = async (req, res) => {
 export const editTask = async (req, res) => {
   try {
     const { description, startDate, endDate, status } = req.body;
-    // console.log("fields:", name, manager, description, startDate, endDate);
-    // console.log("param id:", req.params.id);
 
     //validation
     if (!description || !startDate || !endDate || !status) {
@@ -86,6 +82,25 @@ export const editTask = async (req, res) => {
       success: false,
       error,
       message: "Error in editing task",
+    });
+  }
+};
+
+export const deleteTask = async (req, res) => {
+  try {
+    // Find by taskId and delete task
+    await taskModel.findByIdAndDelete(req.params.id);
+
+    res.status(200).send({
+      success: true,
+      message: "Task deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error while deleting task",
+      error,
     });
   }
 };
