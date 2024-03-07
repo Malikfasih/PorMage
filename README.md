@@ -1,6 +1,6 @@
 # ProMage Frontend
 
-This is the frontend repository for the [ProMage-Backend] project.
+This is the frontend for the [ProMage-Backend] project.
 
 ![Screenshot (59)](https://github.com/Malikfasih/PorMage/assets/90088021/0f0cf4a8-94ff-45f1-aa94-9c29ca992874)
 
