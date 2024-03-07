@@ -1,8 +1,9 @@
 import projectModel from "../models/project.js";
+import taskModel from "../models/task.js";
+import nodemailer from "nodemailer";
 
 export const createProject = async (req, res) => {
   const { name, manager, description, startDate, endDate } = req.body;
-  //   console.log("req fields", name, manager, description, startDate, endDate);
 
   try {
     // Validation
@@ -12,6 +13,31 @@ export const createProject = async (req, res) => {
 
     // Create project
     const project = new projectModel({ ...req.body });
+
+    // Send email notification to associated team
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: "associated-team@example.com",
+      subject: "New Project Created",
+      text: `A new project "${name}" has been created.`,
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.error("Error sending project creation email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+
     res.status(201).send({
       success: true,
       message: "Project created successfully",
@@ -31,14 +57,19 @@ export const createProject = async (req, res) => {
 
 export const getAllProjects = async (req, res) => {
   try {
+    const page = req.query.page || 1; // Default to page 1 if not provided
+    const limit = req.query.limit || 8; // Default to limit of 8 if not provided
+
     const projects = await projectModel
       .find({})
-      .limit(12)
+      .skip((page - 1) * limit) // Calculate the number of documents to skip based on page and limit
+      .limit(limit)
       .populate("tasks")
       .sort({ createdAt: -1 });
+
     res.status(200).send({
       success: true,
-      counTotal: projects.length,
+      totalCount: projects.length,
       message: "All projects",
       projects,
     });
@@ -51,8 +82,6 @@ export const getAllProjects = async (req, res) => {
 export const editProject = async (req, res) => {
   try {
     const { name, manager, description, startDate, endDate } = req.body;
-    // console.log("fields:", name, manager, description, startDate, endDate);
-    // console.log("param id:", req.params.id);
 
     //Validation
     if (!name || !manager || !description || !startDate || !endDate) {
@@ -81,20 +110,35 @@ export const editProject = async (req, res) => {
   }
 };
 
-// delete project
-// export const deleteProject = async (req, res) => {
-//   try {
-//     await projectModel.findByIdAndDelete(req.params.id);
-//     res.status(200).send({
-//       success: true,
-//       message: "Project deleted successfully",
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       success: false,
-//       message: "Error while deleting Project",
-//       error,
-//     });
-//   }
-// };
+// Delete project
+export const deleteProject = async (req, res) => {
+  console.log("delete id:", req.params.id);
+  try {
+    const project = await projectModel
+      .findById(req.params.id)
+      .populate("tasks");
+
+    console.log("project to delete:", project);
+
+    // If project has associated tasks, delete them
+    if (project.tasks && project.tasks.length > 0) {
+      for (const taskId of project.tasks) {
+        await taskModel.findByIdAndDelete(taskId);
+      }
+    }
+
+    // Delete the project itself
+    await projectModel.findByIdAndDelete(req.params.id);
+    res.status(200).send({
+      success: true,
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error while deleting Project",
+      error,
+    });
+  }
+};
